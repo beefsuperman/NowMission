@@ -30,9 +30,11 @@ public class ProvinceDao {
             Cursor cursor = db.rawQuery("select * from province", null);
             if(null != cursor){
                 while(cursor.moveToNext()){
+                    int id=cursor.getInt(cursor.getColumnIndex("id"));
                     int code = cursor.getInt(cursor.getColumnIndex("code"));
                     String name = cursor.getString(cursor.getColumnIndex("name"));
                     Province province = new Province();
+                    province.setId(id);
                     province.setProvinceCode(code);
                     province.setProvinceName(name);
 

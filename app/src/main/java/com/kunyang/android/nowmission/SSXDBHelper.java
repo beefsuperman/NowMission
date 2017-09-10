@@ -36,7 +36,7 @@ public class SSXDBHelper extends SQLiteOpenHelper{
     // 建表语句-area
     public static final String CREATE_Tables3 = "create table "
             + "if not exists "
-            + "area"
+            + "country"
             + " (_id INTEGER NOT NULL PRIMARY KEY,"
             + " name varchar(200),"
             + " pid INTEGER,"
@@ -51,6 +51,8 @@ public class SSXDBHelper extends SQLiteOpenHelper{
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         sqLiteDatabase.execSQL(CREATE_Tables);
+        sqLiteDatabase.execSQL(CREATE_Tables2);
+        sqLiteDatabase.execSQL(CREATE_Tables3);
     }
 
     @Override
