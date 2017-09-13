@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NowMission</string>
+    <string name="openDrawer">openDrawer</string>
+    <string name="closeDrawer">openDrawer</string>
 </resources>
