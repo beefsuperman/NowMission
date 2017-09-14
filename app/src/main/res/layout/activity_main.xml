@@ -41,8 +41,6 @@
 
     </RelativeLayout>
 
-
-
     <ListView
         android:id="@+id/province_list"
         android:layout_width="180dp"

@@ -2,27 +2,35 @@ package com.kunyang.android.nowmission;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.kunyang.android.nowmission.Service.AutoUpdateService;
 import com.kunyang.android.nowmission.gson.Weather;
 import com.kunyang.android.nowmission.util.HttpUtil;
 import com.kunyang.android.nowmission.util.Utility;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -32,7 +40,14 @@ import okhttp3.Response;
  * Created by 坤阳 on 2017/9/11.
  */
 
-public class WeatherActivity extends AppCompatActivity {
+public class WeatherActivity extends AppCompatActivity implements View.OnClickListener,ViewPager.OnPageChangeListener{
+
+    private ImageView[] dots;
+    private int[] ids = {R.id.iv1, R.id.iv2};
+
+    private ViewPagerAdapter vpAdapter;
+    private ViewPager vp;
+    private List<View> views;
 
     private DrawerLayout drawerLayout;
 
@@ -71,8 +86,18 @@ public class WeatherActivity extends AppCompatActivity {
         climate=(TextView)this.findViewById(R.id.climate);
         wind=(TextView)this.findViewById(R.id.wind);
 
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View one_page = inflater.inflate(R.layout.page1, null);
+        View two_page = inflater.inflate(R.layout.page2, null);
+        views = new ArrayList<View>();
+        views.add(one_page);
+        views.add(two_page);
+        vpAdapter = new ViewPagerAdapter(views, this);
+        vp = (ViewPager)findViewById(R.id.viewpager);
+        vp.setAdapter(vpAdapter);
 
-
+        vp.setOnPageChangeListener(this);
+        initDots();
 
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
@@ -107,6 +132,10 @@ public class WeatherActivity extends AppCompatActivity {
         switch (item.getItemId()){
             case R.id.action_share:
                 finish();
+                return true;
+            case R.id.menu_refresh:
+                String weatherCity=getIntent().getStringExtra("weather_city");
+                requestWeather(weatherCity);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -158,6 +187,13 @@ public class WeatherActivity extends AppCompatActivity {
         String climate1="舒适度:"+weather.suggestion.comf.brf;
         String wind1="风强:"+weather.now.wind.deg;
 
+        if (weather!=null&&"ok".equals(weather.status)){
+            Intent intent=new Intent(this, AutoUpdateService.class);
+            startService(intent);
+        }else {
+            Toast.makeText(WeatherActivity.this,"获取天气信息失败",Toast.LENGTH_SHORT).show();
+        }
+
         if (weather.aqi!=null){
             String pmdeg1=weather.aqi.city.aqi;
             String pm25quality1="空气质量:"+weather.aqi.city.qlty;
@@ -176,4 +212,36 @@ public class WeatherActivity extends AppCompatActivity {
         weatherImage.setImageResource(R.drawable.pm);
     }
 
+    private void initDots() {
+        dots = new ImageView[views.size()];
+        for (int i=0; i<views.size(); i++) {
+            dots[i] = (ImageView)findViewById(ids[i]);
+        }
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        for (int a=0; a<ids.length; a++) {
+            if (a==position) {
+                dots[a].setImageResource(R.drawable.page_indicator_focused);
+            } else {
+                dots[a].setImageResource(R.drawable.page_indicator_unfocused);
+            }
+        }
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    @Override
+    public void onClick(View view) {
+
+    }
 }

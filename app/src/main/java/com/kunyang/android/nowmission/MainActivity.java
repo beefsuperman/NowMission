@@ -193,6 +193,8 @@ public class MainActivity extends AppCompatActivity {
         titleText.setText("这里是祖国");
         backButton.setVisibility(View.GONE);
         pList.clear();
+        cList.clear();
+        ccList.clear();
         mProvinceList=dao.getProvinceList();
         for (Province province:mProvinceList){
             pList.add(province.getProvinceName());
