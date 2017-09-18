@@ -20,10 +20,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kunyang.android.nowmission.Service.AutoUpdateService;
+import com.kunyang.android.nowmission.gson.Forecast;
 import com.kunyang.android.nowmission.gson.Weather;
 import com.kunyang.android.nowmission.util.HttpUtil;
 import com.kunyang.android.nowmission.util.Utility;
@@ -64,6 +66,12 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
     private TextView climate;
     private TextView wind;
     private Toolbar mToolbar;
+    private TextView[] FurDate = new TextView[6];
+    private TextView[] FurTemp = new TextView[6];
+    private TextView[] FurWea = new TextView[6];
+    private TextView[] FurWinds = new TextView[6];
+    private ImageView[] FurImages = new ImageView[6];
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -99,6 +107,38 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
         vp.setOnPageChangeListener(this);
         initDots();
 
+        FurDate[0] = (TextView)one_page.findViewById(R.id.weekDay1);
+        FurTemp[0] = (TextView)one_page.findViewById(R.id.temperatureDay1);
+        FurWea[0] = (TextView)one_page.findViewById(R.id.climateDay1);
+        FurWinds[0] = (TextView)one_page.findViewById(R.id.windDay1);
+        FurImages[0] = (ImageView)one_page.findViewById(R.id.imageDay1);
+        FurDate[1] = (TextView)one_page.findViewById(R.id.weekDay2);
+        FurTemp[1] = (TextView)one_page.findViewById(R.id.temperatureDay2);
+        FurWea[1] = (TextView)one_page.findViewById(R.id.climateDay2);
+        FurWinds[1] = (TextView)one_page.findViewById(R.id.windDay2);
+        FurImages[1] = (ImageView)one_page.findViewById(R.id.imageDay2);
+        FurDate[2] = (TextView)one_page.findViewById(R.id.weekDay3);
+        FurTemp[2] = (TextView)one_page.findViewById(R.id.temperatureDay3);
+        FurWea[2] = (TextView)one_page.findViewById(R.id.climateDay3);
+        FurWinds[2] = (TextView)one_page.findViewById(R.id.windDay3);
+        FurImages[2] = (ImageView)one_page.findViewById(R.id.imageDay3);
+        FurDate[3] = (TextView)two_page.findViewById(R.id.weekDay4);
+        FurTemp[3] = (TextView)two_page.findViewById(R.id.temperatureDay4);
+        FurWea[3] = (TextView)two_page.findViewById(R.id.climateDay4);
+        FurWinds[3] = (TextView)two_page.findViewById(R.id.windDay4);
+        FurImages[3] = (ImageView)two_page.findViewById(R.id.imageDay4);
+        FurDate[4] = (TextView)two_page.findViewById(R.id.weekDay5);
+        FurTemp[4] = (TextView)two_page.findViewById(R.id.temperatureDay5);
+        FurWea[4] = (TextView)two_page.findViewById(R.id.climateDay5);
+        FurWinds[4] = (TextView)two_page.findViewById(R.id.windDay5);
+        FurImages[4] = (ImageView)two_page.findViewById(R.id.imageDay5);
+        FurDate[5] = (TextView)two_page.findViewById(R.id.weekDay6);
+        FurTemp[5] = (TextView)two_page.findViewById(R.id.temperatureDay6);
+        FurWea[5] = (TextView)two_page.findViewById(R.id.climateDay6);
+        FurWinds[5] = (TextView)two_page.findViewById(R.id.windDay6);
+        FurImages[5] = (ImageView)two_page.findViewById(R.id.imageDay6);
+
+
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
         if (weatherString!=null){
@@ -109,6 +149,7 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
             String weatherCity=getIntent().getStringExtra("weather_city");
             requestWeather(weatherCity);
         }
+        mToolbar.setTitle(getIntent().getStringExtra("weather_city")+"天气");
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer2);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, mToolbar, R.string.openDrawer, R.string.closeDrawer) {
@@ -180,12 +221,16 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
     private void showWeatherInfo(Weather weather) {
         String city1 =weather.basic.city;
         String titleUpdateTime1=weather.basic.update.updateTime;
-        String humText1="湿度:"+ weather.now.hum +"%";
+        String humText1="相对湿度:"+ weather.now.hum +"%";
 
         String todayWeather1="天气:"+weather.now.cond.txt;
-        String temperature1=weather.now.tmp+"℃";
+        String temperature1="温度:"+weather.now.tmp+"℃";
         String climate1="舒适度:"+weather.suggestion.comf.brf;
-        String wind1="风强:"+weather.now.wind.deg;
+        String wind1="风向(360°):"+weather.now.wind.deg;
+
+        //未来天气预报。
+        updateFutureWeather(weather.forecastList);
+
 
         if (weather!=null&&"ok".equals(weather.status)){
             Intent intent=new Intent(this, AutoUpdateService.class);
@@ -211,6 +256,19 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
         pm25Image.setImageResource(R.drawable.pm);
         weatherImage.setImageResource(R.drawable.pm);
     }
+
+    void updateFutureWeather( List<Forecast> forecastList){
+        for (int i=0; i<forecastList.size(); i++) {
+            Forecast forecast = forecastList.get(i);
+            FurDate[i].setText(forecast.date);
+            FurTemp[i].setText(forecast.tmp.min +"℃"+ "~" + forecast.tmp.max+ "℃");
+            FurWea[i].setText("天气:"+forecast.cond.txt_d);
+            FurWinds[i].setText("风速:"+forecast.wind.spd+"kmph");
+
+
+        }
+    }
+
 
     private void initDots() {
         dots = new ImageView[views.size()];

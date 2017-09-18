@@ -22,4 +22,7 @@ public class Weather {
     public String status;
 
     public Suggestion suggestion;
+
+    @SerializedName("daily_forecast")
+    public List<Forecast> forecastList;
 }

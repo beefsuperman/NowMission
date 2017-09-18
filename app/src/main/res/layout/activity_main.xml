@@ -46,10 +46,7 @@
         android:layout_width="180dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
-        android:background="@color/primary_dark">
-
-    </ListView>
-
+        android:background="@color/primary_dark"/>
 
 </LinearLayout>
 

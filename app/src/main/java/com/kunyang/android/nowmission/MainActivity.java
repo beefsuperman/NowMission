@@ -2,13 +2,17 @@ package com.kunyang.android.nowmission;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,6 +20,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -26,6 +32,7 @@ import android.widget.TextView;
 import com.kunyang.android.nowmission.db.City;
 import com.kunyang.android.nowmission.db.Country;
 import com.kunyang.android.nowmission.db.Province;
+import com.kunyang.android.nowmission.gson.AQI;
 import com.kunyang.android.nowmission.gson.Weather;
 
 import java.util.ArrayList;
@@ -36,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LEVEL_PROVINCE=0;
     private static final int LEVEL_CITY=1;
     private static final int LEVEL_COUNTY=2;
+    private static final int LEVEL_SEARCH=3;
 
     private LayoutInflater m_inflater;
     private ListViewAdapter mListViewAdapter;
@@ -52,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
     private List<String> pList;
 
+
+    private List<City> getCityList;
     private List<City> mCityList;
     private List<Country> mCountryList;
     private List<City> cList=new ArrayList<City>();
@@ -64,17 +74,18 @@ public class MainActivity extends AppCompatActivity {
     private int currentLevel;
 
     private DrawerLayout drawerLayout;
+    private Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle("");
-        if (toolbar != null) {setSupportActionBar(toolbar);}
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mToolbar.setTitle("");
+        if (mToolbar != null) {setSupportActionBar(mToolbar);}
 
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.openDrawer, R.string.closeDrawer) {
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, mToolbar, R.string.openDrawer, R.string.closeDrawer) {
             @Override
             public void onDrawerOpened(View v) {        super.onDrawerOpened(v); }
                 @Override
@@ -115,9 +126,10 @@ public class MainActivity extends AppCompatActivity {
                         selectedCountry=ccList.get(i);
                         weatherCity=selectedCountry.getName();
                     }
-                        Intent intent = new Intent(MainActivity.this, WeatherActivity.class);
-                        intent.putExtra("weather_city", weatherCity);
-                        startActivity(intent);
+                    Intent intent = new Intent(MainActivity.this, WeatherActivity.class);
+                    intent.putExtra("select_city",selectedCity.getName());
+                    intent.putExtra("weather_city", weatherCity);
+                    startActivity(intent);
                 }
             }
         });
@@ -150,11 +162,73 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem searchItem=menu.findItem(R.id.menu_item_search);
+        final SearchView searchView=(SearchView)searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                getCityList=new ArrayList<City>();
+                getCityList=mCityDao.getCityList();
+                cList.clear();
+                pList.clear();
+                if (newText.length()<4&&newText.length()>0){
+                    for (City city:getCityList){
+                        String str=PinyinUtils.converterToFirstSpell(city.getName());
+                        if (str.indexOf(newText.toUpperCase())!=-1) {
+                            pList.add(city.getName());
+                            cList.add(city);
+                            str=null;
+                        }
+                    }
+                    if (pList.size()==0){
+                        for (City city:getCityList){
+                            String str1=PinyinUtils.getPingYin(city.getName());
+                            if (str1.indexOf(newText.toLowerCase())!=-1) {
+                                pList.add(city.getName());
+                                cList.add(city);
+                                str1=null;
+                            }
+                        }
+                    }
+                }else if (newText.length()>=4){
+                    pList.clear();
+                    cList.clear();
+                    for (City city:getCityList){
+                        String str1=PinyinUtils.getPingYin(city.getName());
+                        if (str1.indexOf(newText.toLowerCase())!=-1) {
+                            pList.add(city.getName());
+                            cList.add(city);
+                            str1=null;
+                        }
+                    }
+                }else if (newText.length()==0){
+                    initProvinceList();
+                }
+                ccList.clear();
+                mListViewAdapter.notifyDataSetChanged();
+                mListView.setSelection(0);
+                currentLevel=LEVEL_CITY;
+                return false;
+            }
+        });
+
         return true;
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
-        return true;
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                initProvinceList();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void queryCounties() {
@@ -163,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void prepareCountyList() {
-        titleText.setText("当前地区:"+selectedCity.getName());
+        mToolbar.setTitle("当前地区:"+selectedCity.getName());
         backButton.setVisibility(View.VISIBLE);
         pList.clear();
         mCountryList =mCountryDao.getCountryList();
@@ -174,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (pList.size()==0){
-            titleText.setText("当前地区:"+selectedProvince.getProvinceName());
+            mToolbar.setTitle("当前地区:"+selectedProvince.getProvinceName());
             for (City city:cList){
                 pList.add(city.getName());
             }
@@ -190,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void prepareProvinceList() {
-        titleText.setText("这里是祖国");
+        mToolbar.setTitle("这里是祖国");
         backButton.setVisibility(View.GONE);
         pList.clear();
         cList.clear();
@@ -210,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void prepareCityList() {
-        titleText.setText("当前地区:"+selectedProvince.getProvinceName());
+        mToolbar.setTitle("当前地区:"+selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
         mCityList=mCityDao.getCityList();
         pList.clear();
@@ -270,5 +344,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+
 
 }

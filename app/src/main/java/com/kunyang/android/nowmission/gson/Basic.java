@@ -9,8 +9,6 @@ import com.google.gson.annotations.SerializedName;
 public class Basic {
 
     public String city;
-    @SerializedName("id")
-    public String weatherId;
 
     public Update update;
 
