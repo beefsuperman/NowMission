@@ -182,7 +182,7 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
                 return super.onOptionsItemSelected(item);
         }
     }
-    private void requestWeather(final String weatherCity) {
+    private void requestWeather(String weatherCity) {
         String weatherUrl="https://free-api.heweather.com/v5/weather?city=" + weatherCity + "&key=a960da1bb9f64f289b4432445e0c1974";
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
@@ -226,7 +226,7 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
         String todayWeather1="天气:"+weather.now.cond.txt;
         String temperature1="温度:"+weather.now.tmp+"℃";
         String climate1="舒适度:"+weather.suggestion.comf.brf;
-        String wind1="风向(360°):"+weather.now.wind.deg;
+        String wind1="风向(360°):"+weather.now.wind.deg+"°";
 
         //未来天气预报。
         updateFutureWeather(weather.forecastList);
@@ -254,7 +254,7 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
         climate.setText(climate1);
         wind.setText(wind1);
         pm25Image.setImageResource(R.drawable.pm);
-        weatherImage.setImageResource(R.drawable.pm);
+        changeFutureWeatherImg(weatherImage,weather.now.cond.txt);
     }
 
     void updateFutureWeather( List<Forecast> forecastList){
@@ -265,7 +265,9 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
             FurWea[i].setText("天气:"+forecast.cond.txt_d);
             FurWinds[i].setText("风速:"+forecast.wind.spd+"kmph");
 
-
+            if (forecast.cond.txt_d!=null) {
+                changeFutureWeatherImg(FurImages[i], forecast.cond.txt_d);
+            }
         }
     }
 
@@ -301,5 +303,38 @@ public class WeatherActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View view) {
 
+    }
+
+
+    void changeFutureWeatherImg(ImageView view, String str){
+        if(str.equals("晴")) {
+            view.setImageResource(R.drawable.qing);
+        } else if (str.equals("多云")) {
+            view.setImageResource(R.drawable.duoyun);
+        }else if (str.equals("少云")) {
+            view.setImageResource(R.drawable.shaoyun);
+        }else if (str.equals("晴间多云")) {
+            view.setImageResource(R.drawable.qingduo);
+        }else if (str.equals("阴")) {
+            view.setImageResource(R.drawable.yin);
+        }else if (str.equals("阵雨")) {
+            view.setImageResource(R.drawable.zhenyu);
+        }else if (str.equals("中雨")) {
+            view.setImageResource(R.drawable.zhongyu);
+        }else if (str.equals("小雨")) {
+            view.setImageResource(R.drawable.xiaoyu);
+        }else if (str.equals("大雨")) {
+            view.setImageResource(R.drawable.dayu);
+        }else if (str.equals("暴雨")) {
+            view.setImageResource(R.drawable.baoyu);
+        }else if (str.equals("小雪")) {
+            view.setImageResource(R.drawable.xiaoxue);
+        }else if (str.equals("薄雾")) {
+            view.setImageResource(R.drawable.bowu);
+        }else if (str.equals("雾")) {
+            view.setImageResource(R.drawable.wu);
+        }else if (str.equals("沙尘暴")) {
+            view.setImageResource(R.drawable.shachenbao);
+        }
     }
 }
